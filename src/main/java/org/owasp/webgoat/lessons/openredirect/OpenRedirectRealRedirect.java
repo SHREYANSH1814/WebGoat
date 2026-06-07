@@ -15,9 +15,34 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class OpenRedirectRealRedirect {
 
+  /*
+ * SPDX-FileCopyrightText: Copyright © 2025 WebGoat authors
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+package org.owasp.webgoat.lessons.openredirect;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+/**
+ * Provides a real 302 redirect for experimentation separate from assignment scoring.
+ */
+@Controller
+public class OpenRedirectRealRedirect {
+
   @GetMapping("/OpenRedirect/realRedirect")
   public ModelAndView real(@RequestParam("url") String url) {
-    // Intentionally vulnerable: no validation
+    // Validate the URL to prevent open redirect
+    if (url == null || url.isEmpty()) {
+      return new ModelAndView("redirect:/");
+    }
+    // Only allow relative URLs to prevent redirecting to external sites
+    if (!url.startsWith("/") || url.contains("//")) {
+      return new ModelAndView("redirect:/");
+    }
     return new ModelAndView("redirect:" + url);
   }
+}
 }
