@@ -25,9 +25,20 @@ claims:
 
 [source]
 ----
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import java.security.Key;
+
 var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.NFvYpuwbF6YWbPyaNAGEPw9wbhiQSovvSrD89B8K7Ng";
 
-Jwts.parser().setSigningKey("test").parseClaimsJws(token);
+Key key = Keys.hmacShaKeyFor("testtesttesttesttesttesttesttest".getBytes());
+
+Jws<Claims> claimsJws = Jwts.parserBuilder()
+    .setSigningKey(key)
+    .build()
+    .parseClaimsJws(token);
 ----
 
 will work!
