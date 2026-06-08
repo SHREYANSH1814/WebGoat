@@ -46,7 +46,7 @@ public class SqlInjectionLesson5b implements AssignmentEndpoint {
     try (Connection connection = dataSource.getConnection()) {
       PreparedStatement query =
           connection.prepareStatement(
-              queryString, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+    queryString, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
       int count = 0;
       try {
