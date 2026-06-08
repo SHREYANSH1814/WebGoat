@@ -19,7 +19,32 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+    // REQUIRES IMPORT: java.io.ObjectInputStream
+// REQUIRES IMPORT: java.io.ByteArrayInputStream
+// REQUIRES IMPORT: java.io.IOException
+// REQUIRES IMPORT: java.security.MessageDigest
+// REQUIRES IMPORT: java.security.NoSuchAlgorithmException
+// REQUIRES IMPORT: javax.crypto.Mac
+// REQUIRES IMPORT: javax.crypto.spec.SecretKeySpec
+
+// Example secret key for HMAC verification - in real use, securely manage this key
+private static final byte[] HMAC_SECRET_KEY = "replace_with_secure_key".getBytes();
+
+private ObjectInputStream createVerifiedObjectInputStream(byte[] data, byte[] expectedHmac) throws IOException, SecurityException {
+    // Verify HMAC before deserialization
+    try {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec keySpec = new SecretKeySpec(HMAC_SECRET_KEY, "HmacSHA256");
+        mac.init(keySpec);
+        byte[] actualHmac = mac.doFinal(data);
+        if (!MessageDigest.isEqual(actualHmac, expectedHmac)) {
+            throw new SecurityException("Data integrity check failed: HMAC mismatch");
+        }
+    } catch (NoSuchAlgorithmException | java.security.InvalidKeyException e) {
+        throw new IOException("Failed to verify data integrity", e);
+    }
+    return new ObjectInputStream(new ByteArrayInputStream(data));
+}
     Object o = ois.readObject();
     ois.close();
     return o;
