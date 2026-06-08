@@ -36,7 +36,11 @@ public class HashingAssignment implements AssignmentEndpoint {
 
       String secret = SECRETS[new Random().nextInt(SECRETS.length)];
 
-      MessageDigest md = MessageDigest.getInstance("MD5");
+                                                   // REQUIRES IMPORT: javax.crypto.Mac
+// REQUIRES IMPORT: javax.crypto.spec.SecretKeySpec
+Mac mac = Mac.getInstance("HmacSHA256");
+SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+mac.init(secretKeySpec);
       md.update(secret.getBytes());
       byte[] digest = md.digest();
       md5Hash = DatatypeConverter.printHexBinary(digest).toUpperCase();
