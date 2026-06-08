@@ -58,6 +58,7 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
     Cookie cookie = new Cookie(COOKIE_NAME, "");
     cookie.setMaxAge(0);
     response.addCookie(cookie);
+cookie.setSecure(true);
   }
 
   private AttackResult credentialsLoginFlow(
