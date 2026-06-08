@@ -39,8 +39,29 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+         // REQUIRES IMPORT: javax.crypto.Mac
+// REQUIRES IMPORT: javax.crypto.spec.SecretKeySpec
+// REQUIRES IMPORT: java.util.Arrays
+// REQUIRES IMPORT: java.nio.charset.StandardCharsets
+
+String secretKey = "replace_with_secure_key"; // Use a securely stored key
+String[] parts = b64token.split("\\.");
+if (parts.length != 2) {
+    throw new IllegalArgumentException("Invalid token format");
+}
+byte[] data = Base64.getDecoder().decode(parts[0]);
+byte[] signature = Base64.getDecoder().decode(parts[1]);
+
+Mac mac = Mac.getInstance("HmacSHA256");
+mac.init(new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+byte[] expectedSignature = mac.doFinal(parts[0].getBytes(StandardCharsets.UTF_8));
+
+if (!Arrays.equals(signature, expectedSignature)) {
+    throw new SecurityException("Invalid token signature");
+}
+
+try (ObjectInputStream ois =
+    new ObjectInputStream(new ByteArrayInputStream(data))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
