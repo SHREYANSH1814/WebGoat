@@ -15,9 +15,21 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class OpenRedirectRealRedirect {
 
-  @GetMapping("/OpenRedirect/realRedirect")
-  public ModelAndView real(@RequestParam("url") String url) {
-    // Intentionally vulnerable: no validation
-    return new ModelAndView("redirect:" + url);
+  // REQUIRES IMPORT: java.net.URI
+// REQUIRES IMPORT: java.net.URISyntaxException
+@GetMapping("/OpenRedirect/realRedirect")
+public ModelAndView real(@RequestParam("url") String url) {
+  try {
+    URI uri = new URI(url);
+    if (uri.isAbsolute() && ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))) {
+      return new ModelAndView("redirect:" + url);
+    } else {
+      // Redirect to a safe default page if validation fails
+      return new ModelAndView("redirect:/defaultSafePage");
+    }
+  } catch (URISyntaxException e) {
+    // Redirect to a safe default page if URL is malformed
+    return new ModelAndView("redirect:/defaultSafePage");
   }
+}
 }
