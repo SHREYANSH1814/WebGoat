@@ -45,7 +45,7 @@ public class SqlInjectionLesson4 implements AssignmentEndpoint {
           connection.createStatement(TYPE_SCROLL_INSENSITIVE, CONCUR_READ_ONLY)) {
         statement.executeUpdate(query);
         connection.commit();
-        ResultSet results = statement.executeQuery("SELECT phone from employees;");
+                            ResultSet results = statement.executeQuery("SELECT phone from employees;");
         StringBuilder output = new StringBuilder();
         // user completes lesson if column phone exists
         if (results.first()) {
