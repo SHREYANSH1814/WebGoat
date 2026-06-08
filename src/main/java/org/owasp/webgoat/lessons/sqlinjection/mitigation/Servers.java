@@ -49,8 +49,10 @@ public class Servers {
       try (var statement =
           connection.prepareStatement(
               "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
-                  + " of order' order by "
-                  + column)) {
+    + " of order' order by ?") { // Use parameter placeholder instead of string concatenation
+PreparedStatement pstmt = connection.prepareStatement(sql);
+pstmt.setString(1, column); // Set the column name as a parameter safely
+ResultSet rs = pstmt.executeQuery();
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
