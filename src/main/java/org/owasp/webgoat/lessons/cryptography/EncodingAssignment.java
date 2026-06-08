@@ -36,7 +36,15 @@ public class EncodingAssignment implements AssignmentEndpoint {
       String password =
           HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
       basicAuth = getBasicAuth(username, password);
-      request.getSession().setAttribute("basicAuth", basicAuth);
+      request.getSession().setAttribute("basicAuth", validateBasicAuth(basicAuth));
+
+private String validateBasicAuth(String basicAuth) {
+    // Implement validation logic to ensure basicAuth is safe and conforms to expected format
+    if (basicAuth == null || !basicAuth.matches("^[A-Za-z0-9+/=]+$")) {
+        throw new IllegalArgumentException("Invalid basicAuth value");
+    }
+    return basicAuth;
+}
     }
     return "Authorization: Basic ".concat(basicAuth);
   }
