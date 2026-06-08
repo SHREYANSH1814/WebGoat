@@ -39,8 +39,33 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+         // REQUIRES IMPORT: javax.crypto.Mac
+// REQUIRES IMPORT: javax.crypto.spec.SecretKeySpec
+// REQUIRES IMPORT: java.security.InvalidKeyException
+// REQUIRES IMPORT: java.security.NoSuchAlgorithmException
+
+byte[] decodedToken = Base64.getDecoder().decode(b64token);
+byte[] hmacKey = "replace_with_secure_key".getBytes(); // Use a securely stored key
+byte[] tokenData;
+byte[] tokenHmac;
+
+int hmacLength = 32; // length of HMAC-SHA256 in bytes
+if (decodedToken.length < hmacLength) {
+    throw new IllegalArgumentException("Invalid token length");
+}
+tokenData = Arrays.copyOfRange(decodedToken, 0, decodedToken.length - hmacLength);
+tokenHmac = Arrays.copyOfRange(decodedToken, decodedToken.length - hmacLength, decodedToken.length);
+
+Mac mac = Mac.getInstance("HmacSHA256");
+mac.init(new SecretKeySpec(hmacKey, "HmacSHA256"));
+byte[] computedHmac = mac.doFinal(tokenData);
+
+if (!MessageDigest.isEqual(computedHmac, tokenHmac)) {
+    throw new SecurityException("Invalid token signature");
+}
+
+try (ObjectInputStream ois =
+    new ObjectInputStream(new ByteArrayInputStream(tokenData))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
