@@ -49,8 +49,12 @@ public class Servers {
       try (var statement =
           connection.prepareStatement(
               "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
-                  + " of order' order by "
-                  + column)) {
+    + " of order' order by ?") {
+    // REQUIRES IMPORT: java.sql.PreparedStatement
+    PreparedStatement pstmt = connection.prepareStatement(sql);
+    pstmt.setString(1, column);
+    ResultSet rs = pstmt.executeQuery();
+}
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
