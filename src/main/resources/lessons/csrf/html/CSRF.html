@@ -235,14 +235,16 @@
             </i>
         </div>
         <form class="attack-form" accept-charset="UNKNOWN" id="confirm-flag-login"
-              method="POST" name="form2"
-              th:action="@{/csrf/login}">
+      method="POST" name="form2"
+      th:action="@{/csrf/login}">
 
-            Press the button below when your are logged in as the other user<br/>
+    <input type="hidden" name="csrfmiddlewaretoken" th:value="${_csrf.token}"/>
 
-            <input name="submit" value="Solved!" type="submit"/>
+    Press the button below when your are logged in as the other user<br/>
 
-        </form>
+    <input name="submit" value="Solved!" type="submit"/>
+
+</form>
 
         <div class="attack-feedback"></div>
         <div class="attack-output"></div>
