@@ -76,7 +76,9 @@ public class FileServer {
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+                                  // REQUIRES IMPORT: java.nio.file.Paths
+// REQUIRES IMPORT: java.nio.file.Path
+log.debug("File saved to {}", new File(destinationDir, Paths.get(multipartFile.getOriginalFilename()).getFileName().toString()));
 
     return new ModelAndView(
         new RedirectView("files", true),
