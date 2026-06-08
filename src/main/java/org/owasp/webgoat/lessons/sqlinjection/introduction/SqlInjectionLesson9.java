@@ -62,7 +62,9 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // do injectable query
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
       SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
+      // REQUIRES IMPORT: java.sql.PreparedStatement
+PreparedStatement preparedStatement = connection.prepareStatement(queryInjection);
+preparedStatement.execute();
       // check new sum of salaries other employees and new salaries of John
       int newJohnSalary = this.getJohnSalary(connection);
       int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
