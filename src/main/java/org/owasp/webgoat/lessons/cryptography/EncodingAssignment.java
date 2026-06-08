@@ -36,7 +36,9 @@ public class EncodingAssignment implements AssignmentEndpoint {
       String password =
           HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
       basicAuth = getBasicAuth(username, password);
-      request.getSession().setAttribute("basicAuth", basicAuth);
+                                                     // REQUIRES IMPORT: java.util.regex.Pattern
+String sanitizedBasicAuth = basicAuth != null ? basicAuth.replaceAll("[^a-zA-Z0-9@._-]", "") : null;
+request.getSession().setAttribute("basicAuth", sanitizedBasicAuth);
     }
     return "Authorization: Basic ".concat(basicAuth);
   }
