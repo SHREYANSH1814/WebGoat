@@ -97,8 +97,9 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+          // REQUIRES IMPORT: java.nio.file.Paths
+var safeFileName = Paths.get((id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg").getFileName().toString();
+var catPicture = new File(catPicturesDirectory, safeFileName);
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
