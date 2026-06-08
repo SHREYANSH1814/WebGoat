@@ -19,7 +19,8 @@ public class SessionService {
   private final RestartLessonService restartLessonService;
   private final Messages messages;
 
-  @RequestMapping(path = "/service/enable-security.mvc", produces = "application/json")
+   @RequestMapping(path = "/service/enable-security.mvc", method = RequestMethod.POST, produces = "application/json")
+// REQUIRES IMPORT: org.springframework.web.bind.annotation.RequestMethod
   @ResponseBody
   public String applySecurity(@CurrentUser WebGoatUser user) {
     // webSession.toggleSecurity();
