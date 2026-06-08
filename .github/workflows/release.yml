@@ -22,9 +22,12 @@ jobs:
 
       - name: "Set labels for ${{ github.ref }}"
         run: |
-          echo "WEBGOAT_TAG_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-          WEBGOAT_MAVEN_VERSION=${{ github.ref_name }}
-          echo "WEBGOAT_MAVEN_VERSION=${WEBGOAT_MAVEN_VERSION:1}" >> $GITHUB_ENV
+  echo "WEBGOAT_TAG_VERSION=$WEBGOAT_TAG_VERSION" >> $GITHUB_ENV
+  WEBGOAT_TAG_VERSION=${{ github.ref_name }}
+  WEBGOAT_MAVEN_VERSION=$WEBGOAT_TAG_VERSION
+  echo "WEBGOAT_MAVEN_VERSION=${WEBGOAT_MAVEN_VERSION:1}" >> $GITHUB_ENV
+env:
+  WEBGOAT_TAG_VERSION: ${{ github.ref_name }}
       - name: Build with Maven
         run: |
           mvn --no-transfer-progress versions:set -DnewVersion=${{ env.WEBGOAT_MAVEN_VERSION }}
