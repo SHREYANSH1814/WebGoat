@@ -75,6 +75,7 @@ public class SpoofCookieAssignment implements AssignmentEndpoint {
       newCookie.setPath("/WebGoat");
       newCookie.setSecure(true);
       response.addCookie(newCookie);
+newCookie.setHttpOnly(true);
       return informationMessage(this)
           .feedback("spoofcookie.login")
           .output(String.format(COOKIE_INFO, lowerCasedUsername, newCookie.getValue()))
