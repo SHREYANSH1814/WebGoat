@@ -91,7 +91,9 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
 
   private int getSqlInt(Connection connection, String query) throws SQLException {
     Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
+                        // REQUIRES IMPORT: java.sql.PreparedStatement
+PreparedStatement preparedStatement = connection.prepareStatement(query);
+ResultSet results = preparedStatement.executeQuery();
     results.first();
     return results.getInt(1);
   }
