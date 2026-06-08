@@ -54,7 +54,22 @@ public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
       try {
         var decodedJWT = JWT.decode(token);
         var jku = decodedJWT.getHeaderClaim("jku");
-        var jwkProvider = new JwkProviderBuilder(new URL(jku.asString())).build();
+                                                 // REQUIRES IMPORT: java.net.URL
+// REQUIRES IMPORT: java.net.MalformedURLException
+
+URL validatedUrl;
+try {
+    URL url = new URL(jku.asString());
+    String host = url.getHost();
+    // Define an allowlist of approved hosts
+    if (!host.equals("trusted.example.com") && !host.equals("another-trusted-host.com")) {
+        throw new IllegalArgumentException("Unapproved host in JKU URL");
+    }
+    validatedUrl = url;
+} catch (MalformedURLException e) {
+    throw new IllegalArgumentException("Invalid URL format in JKU", e);
+}
+var jwkProvider = new JwkProviderBuilder(validatedUrl).build();
         var jwk = jwkProvider.get(decodedJWT.getKeyId());
         var algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey());
         JWT.require(algorithm).build().verify(decodedJWT);
