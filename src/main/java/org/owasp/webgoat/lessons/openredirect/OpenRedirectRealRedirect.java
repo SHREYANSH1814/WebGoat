@@ -15,9 +15,21 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class OpenRedirectRealRedirect {
 
-  @GetMapping("/OpenRedirect/realRedirect")
-  public ModelAndView real(@RequestParam("url") String url) {
-    // Intentionally vulnerable: no validation
+  // REQUIRES IMPORT: java.net.URI
+// REQUIRES IMPORT: java.net.URISyntaxException
+@GetMapping("/OpenRedirect/realRedirect")
+public ModelAndView real(@RequestParam("url") String url) {
+  try {
+    URI uri = new URI(url);
+    // Allow only relative URLs or absolute URLs with allowed hosts (example: same host)
+    if (uri.isAbsolute()) {
+      // Reject absolute URLs to prevent open redirect
+      throw new IllegalArgumentException("Absolute URLs are not allowed");
+    }
     return new ModelAndView("redirect:" + url);
+  } catch (URISyntaxException | IllegalArgumentException e) {
+    // Invalid URL or disallowed redirect, fallback to a safe default
+    return new ModelAndView("redirect:/");
   }
+}
 }
