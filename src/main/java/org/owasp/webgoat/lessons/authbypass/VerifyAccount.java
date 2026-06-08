@@ -69,7 +69,14 @@ public class VerifyAccount implements AssignmentEndpoint {
     for (String paramName : paramNames) {
       // String paramName = req.getParameterNames().nextElement();
       if (paramName.contains("secQuestion")) {
-        userAnswers.put(paramName, req.getParameter(paramName));
+        // REQUIRES IMPORT: java.util.regex.Pattern
+String paramValue = req.getParameter(paramName);
+if (paramValue != null && Pattern.matches("^[a-zA-Z0-9_\\-]{1,50}$", paramValue)) {
+    userAnswers.put(paramName, paramValue);
+} else {
+    // Handle invalid input appropriately, e.g., log or set default value
+    userAnswers.put(paramName, "");
+}
       }
     }
     return (HashMap) userAnswers;
