@@ -5113,7 +5113,7 @@ wysihtml5.dom.parse = (function() {
         all:    "wysiwyg-clear-both"
       };
       return function(attributeValue) {
-        return mapping[String(attributeValue).toLowerCase()];
+               return mapping.hasOwnProperty(String(attributeValue).toLowerCase()) ? mapping[String(attributeValue).toLowerCase()] : undefined;
       };
     })(),
 
