@@ -39,8 +39,32 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+         // REQUIRES IMPORT: javax.crypto.Mac
+// REQUIRES IMPORT: javax.crypto.spec.SecretKeySpec
+// REQUIRES IMPORT: java.util.Arrays
+// REQUIRES IMPORT: java.nio.charset.StandardCharsets
+
+String secretKey = "replace_with_secure_key"; // Use a securely stored key
+byte[] decodedBytes = Base64.getDecoder().decode(b64token);
+
+// Separate the HMAC from the data (assuming last 32 bytes are HMAC for HMAC-SHA256)
+int hmacLength = 32;
+if (decodedBytes.length < hmacLength) {
+    throw new SecurityException("Invalid token length");
+}
+byte[] data = Arrays.copyOfRange(decodedBytes, 0, decodedBytes.length - hmacLength);
+byte[] receivedHmac = Arrays.copyOfRange(decodedBytes, decodedBytes.length - hmacLength, decodedBytes.length);
+
+Mac mac = Mac.getInstance("HmacSHA256");
+SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+mac.init(keySpec);
+byte[] computedHmac = mac.doFinal(data);
+
+if (!Arrays.equals(receivedHmac, computedHmac)) {
+    throw new SecurityException("Invalid HMAC - data may have been tampered with");
+}
+
+try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
