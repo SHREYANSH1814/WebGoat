@@ -36,7 +36,25 @@ public class EncodingAssignment implements AssignmentEndpoint {
       String password =
           HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
       basicAuth = getBasicAuth(username, password);
-      request.getSession().setAttribute("basicAuth", basicAuth);
+      request.getSession().setAttribute("basicAuth", sanitizeBasicAuth(basicAuth));
+
+private String sanitizeBasicAuth(String basicAuth) {
+    if (basicAuth == null) {
+        return null;
+    }
+    // Basic validation: ensure the string matches expected Basic Auth format "Basic base64credentials"
+    if (!basicAuth.startsWith("Basic ")) {
+        throw new IllegalArgumentException("Invalid basicAuth format");
+    }
+    String base64Credentials = basicAuth.substring(6);
+    // Validate base64 encoding
+    try {
+        java.util.Base64.getDecoder().decode(base64Credentials);
+    } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("Invalid base64 encoding in basicAuth");
+    }
+    return basicAuth;
+}
     }
     return "Authorization: Basic ".concat(basicAuth);
   }
