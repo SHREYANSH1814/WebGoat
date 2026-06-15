@@ -19,7 +19,21 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+    // REQUIRES IMPORT: java.io.ObjectInputFilter
+ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+ois.setObjectInputFilter(info -> {
+    if (info.serialClass() != null) {
+        String className = info.serialClass().getName();
+        // Allow only specific classes to be deserialized
+        if (className.equals("com.example.AllowedClass1") ||
+            className.equals("com.example.AllowedClass2")) {
+            return ObjectInputFilter.Status.ALLOWED;
+        } else {
+            return ObjectInputFilter.Status.REJECTED;
+        }
+    }
+    return ObjectInputFilter.Status.UNDECIDED;
+});
     Object o = ois.readObject();
     ois.close();
     return o;
