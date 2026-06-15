@@ -39,8 +39,26 @@ public class InsecureDeserializationTask implements AssignmentEndpoint {
 
     b64token = token.replace('-', '+').replace('_', '/');
 
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(b64token)))) {
+         // REQUIRES IMPORT: javax.crypto.Mac
+// REQUIRES IMPORT: javax.crypto.spec.SecretKeySpec
+// REQUIRES IMPORT: java.util.Arrays
+// REQUIRES IMPORT: java.nio.charset.StandardCharsets
+
+byte[] decodedToken = Base64.getDecoder().decode(b64token);
+byte[] hmacKey = "your-secret-key".getBytes(StandardCharsets.UTF_8); // Replace with secure key management
+byte[] expectedHmac = Arrays.copyOfRange(decodedToken, 0, 32); // assuming HMAC is 32 bytes
+byte[] serializedObject = Arrays.copyOfRange(decodedToken, 32, decodedToken.length);
+
+Mac mac = Mac.getInstance("HmacSHA256");
+mac.init(new SecretKeySpec(hmacKey, "HmacSHA256"));
+byte[] actualHmac = mac.doFinal(serializedObject);
+
+if (!Arrays.equals(expectedHmac, actualHmac)) {
+    throw new SecurityException("Invalid HMAC - data may have been tampered with");
+}
+
+try (ObjectInputStream ois =
+    new ObjectInputStream(new ByteArrayInputStream(serializedObject))) {
       before = System.currentTimeMillis();
       Object o = ois.readObject();
       if (!(o instanceof VulnerableTaskHolder)) {
