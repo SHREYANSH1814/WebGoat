@@ -139,7 +139,9 @@ public class SqlInjectionLesson8 implements AssignmentEndpoint {
 
     try {
       Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-      statement.executeUpdate(logQuery);
+      // REQUIRES IMPORT: java.sql.PreparedStatement
+PreparedStatement preparedStatement = connection.prepareStatement(logQuery);
+preparedStatement.executeUpdate();
     } catch (SQLException e) {
       System.err.println(e.getMessage());
     }
