@@ -76,8 +76,7 @@ public class SqlInjectionMitigationIntegrationTest extends IntegrationTest {
         .body(
             "trace",
             containsString(
-                "select id, hostname, ip, mac, status, description from SERVERS where status <>"
-                    + " 'out of order' order by"));
+                "select id, hostname, ip, mac, status, description from SERVERS where status <> ? order by";
 
     params.clear();
     params.put("ip", "104.130.219.202");
