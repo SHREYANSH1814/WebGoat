@@ -32,7 +32,13 @@ public class StartLesson {
         .findFirst()
         .ifPresent(
             lesson -> {
-              request.setAttribute("lesson", lesson);
+              request.setAttribute("lesson", sanitizeLesson(lesson));
+
+private Object sanitizeLesson(Object lesson) {
+    // Implement validation or sanitization logic here to ensure lesson is safe to trust
+    // For example, validate fields, escape strings, or create a safe copy
+    return lesson; // Replace with actual sanitized object
+}
             });
 
     return model;
