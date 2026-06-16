@@ -49,8 +49,9 @@ public class Servers {
       try (var statement =
           connection.prepareStatement(
               "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
-                  + " of order' order by "
-                  + column)) {
+    + " of order' order by ?") {
+    preparedStatement.setString(1, column);
+}
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
