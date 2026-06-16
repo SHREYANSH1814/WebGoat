@@ -113,6 +113,7 @@ public class JWTVotesEndpoint implements AssignmentEndpoint {
               .compact();
       Cookie cookie = new Cookie("access_token", token);
       response.addCookie(cookie);
+cookie.setSecure(true);
       response.setStatus(HttpStatus.OK.value());
       response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     } else {
