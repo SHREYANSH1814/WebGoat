@@ -51,7 +51,16 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
-    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
+                                         // REQUIRES IMPORT: java.nio.file.Path
+// REQUIRES IMPORT: java.nio.file.Paths
+// REQUIRES IMPORT: java.nio.file.Files
+// REQUIRES IMPORT: java.io.IOException
+
+Path basePath = Paths.get(webGoatHomeDirectory.getPath(), "PathTraversal", "cats").toAbsolutePath().normalize();
+if (!basePath.startsWith(webGoatHomeDirectory.toPath().toAbsolutePath().normalize())) {
+    throw new IOException("Invalid directory path");
+}
+this.catPicturesDirectory = basePath.toFile();
     this.catPicturesDirectory.mkdirs();
   }
 
