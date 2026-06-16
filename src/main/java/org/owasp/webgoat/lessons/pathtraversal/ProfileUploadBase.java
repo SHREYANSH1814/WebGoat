@@ -67,7 +67,19 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
   @SneakyThrows
   protected File cleanupAndCreateDirectoryForUser(String username) {
-    var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+                                   // REQUIRES IMPORT: java.nio.file.Paths
+// REQUIRES IMPORT: java.nio.file.Path
+// REQUIRES IMPORT: java.nio.file.Files
+// REQUIRES IMPORT: java.io.IOException
+
+Path basePath = Paths.get(this.webGoatHomeDirectory, "/PathTraversal").toRealPath().normalize();
+Path userPath = basePath.resolve(username).normalize();
+
+if (!userPath.startsWith(basePath)) {
+    throw new IOException("Invalid path: Path traversal attempt detected");
+}
+
+var uploadDirectory = userPath.toFile();
     if (uploadDirectory.exists()) {
       FileSystemUtils.deleteRecursively(uploadDirectory);
     }
