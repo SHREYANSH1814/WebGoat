@@ -48,10 +48,13 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
   protected AttackResult injectableQueryIntegrity(String name, String auth_tan) {
     StringBuilder output = new StringBuilder();
     String queryInjection =
-        "SELECT * FROM employees WHERE last_name = '"
-            + name
-            + "' AND auth_tan = '"
-            + auth_tan
+        // REQUIRES IMPORT: java.sql.PreparedStatement
+// REQUIRES IMPORT: java.sql.Connection
+
+String sql = "SELECT * FROM employees WHERE last_name = ? AND auth_tan = ?";
+PreparedStatement pstmt = connection.prepareStatement(sql);
+pstmt.setString(1, name);
+pstmt.setString(2, auth_tan);
             + "'";
     try (Connection connection = dataSource.getConnection()) {
       // V2019_09_26_7__employees.sql
