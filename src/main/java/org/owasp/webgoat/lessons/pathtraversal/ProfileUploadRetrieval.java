@@ -96,7 +96,11 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
           .body("Illegal characters are not allowed in the query params");
     }
     try {
-      var id = request.getParameter("id");
+      // REQUIRES IMPORT: java.util.regex.Pattern
+var id = request.getParameter("id");
+if (id == null || !Pattern.matches("[a-zA-Z0-9_-]+", id)) {
+    throw new IllegalArgumentException("Invalid id parameter");
+}
       var catPicture =
           new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
 
