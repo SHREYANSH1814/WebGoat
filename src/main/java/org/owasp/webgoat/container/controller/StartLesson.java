@@ -32,7 +32,49 @@ public class StartLesson {
         .findFirst()
         .ifPresent(
             lesson -> {
-              request.setAttribute("lesson", lesson);
+              /*
+ * SPDX-FileCopyrightText: Copyright © 2016 WebGoat authors
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+package org.owasp.webgoat.container.controller;
+
+import jakarta.servlet.http.HttpServletRequest;
+import org.owasp.webgoat.container.session.Course;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+@Controller
+public class StartLesson {
+
+  private final Course course;
+
+  public StartLesson(Course course) {
+    this.course = course;
+  }
+
+  @GetMapping(
+      value = {"*.lesson"},
+      produces = "text/html")
+  public ModelAndView lessonPage(HttpServletRequest request) {
+      var model = new ModelAndView("lesson_content");
+      String lessonName = request.getParameter("lessonName");
+      if (lessonName == null || lessonName.isEmpty()) {
+          model.addObject("error", "Lesson name is missing or empty.");
+          return model;
+      }
+      // Validate lessonName against allowed lessons
+      var lessonOpt = course.getLessons().stream()
+          .filter(l -> l.getId().equals(lessonName))
+          .findFirst();
+      if (lessonOpt.isPresent()) {
+          request.setAttribute("lesson", lessonOpt.get());
+      } else {
+          model.addObject("error", "Invalid lesson name.");
+      }
+      return model;
+    }
+}
             });
 
     return model;
