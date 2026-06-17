@@ -57,7 +57,15 @@ public class MavenWrapperDownloader {
         if(mavenWrapperPropertyFile.exists()) {
             FileInputStream mavenWrapperPropertyFileInputStream = null;
             try {
-                mavenWrapperPropertyFileInputStream = new FileInputStream(mavenWrapperPropertyFile);
+                                                      // REQUIRES IMPORT: java.nio.file.Path
+// REQUIRES IMPORT: java.nio.file.Paths
+// REQUIRES IMPORT: java.nio.file.Files
+Path baseDir = Paths.get("/harness/.mvn/wrapper").toRealPath().normalize();
+Path resolvedPath = baseDir.resolve(mavenWrapperPropertyFile).normalize();
+if (!resolvedPath.startsWith(baseDir)) {
+    throw new SecurityException("Invalid file path: Path traversal attempt detected");
+}
+mavenWrapperPropertyFileInputStream = new FileInputStream(resolvedPath.toFile());
                 Properties mavenWrapperProperties = new Properties();
                 mavenWrapperProperties.load(mavenWrapperPropertyFileInputStream);
                 url = mavenWrapperProperties.getProperty(PROPERTY_NAME_WRAPPER_URL, url);
