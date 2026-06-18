@@ -60,7 +60,14 @@ public class MavenWrapperDownloader {
                 mavenWrapperPropertyFileInputStream = new FileInputStream(mavenWrapperPropertyFile);
                 Properties mavenWrapperProperties = new Properties();
                 mavenWrapperProperties.load(mavenWrapperPropertyFileInputStream);
-                url = mavenWrapperProperties.getProperty(PROPERTY_NAME_WRAPPER_URL, url);
+                String candidateUrl = mavenWrapperProperties.getProperty(PROPERTY_NAME_WRAPPER_URL, url);
+                // Validate that the URL is a valid HTTP or HTTPS URL to prevent path traversal or other schemes
+                URL validatedUrl = new URL(candidateUrl);
+                String protocol = validatedUrl.getProtocol();
+                if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
+                    throw new IOException("Invalid protocol in wrapperUrl property: " + protocol);
+                }
+                url = candidateUrl;
             } catch (IOException e) {
                 System.out.println("- ERROR loading '" + MAVEN_WRAPPER_PROPERTIES_PATH + "'");
             } finally {
