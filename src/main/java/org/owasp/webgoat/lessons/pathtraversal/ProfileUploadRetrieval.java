@@ -10,6 +10,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +62,13 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
               .getInputStream()) {
-        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg")));
+        File destinationFile = new File(catPicturesDirectory, i + ".jpg");
+        String canonicalDirPath = catPicturesDirectory.getCanonicalPath();
+        String canonicalDestPath = destinationFile.getCanonicalPath();
+        if (!canonicalDestPath.startsWith(canonicalDirPath + File.separator)) {
+            throw new IOException("File is outside the target directory");
+        }
+        FileCopyUtils.copy(is, new FileOutputStream(destinationFile));
       } catch (Exception e) {
         log.error("Unable to copy pictures" + e.getMessage());
       }
