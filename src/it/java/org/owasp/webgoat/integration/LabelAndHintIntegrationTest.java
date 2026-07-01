@@ -5,6 +5,8 @@
 package org.owasp.webgoat.integration;
 
 import io.restassured.RestAssured;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import java.io.FileInputStream;
@@ -164,12 +166,21 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
     } else {
       lang = "_" + lang;
     }
-    try (InputStream input =
-        new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) {
-
-      prop = new Properties();
-      // load a properties file
-      prop.load(input);
+    try {
+      // Validate the lang parameter to prevent path traversal
+      if (!lang.matches("^_[a-zA-Z]{2}$")) {
+        throw new IllegalArgumentException("Invalid language code");
+      }
+      String filePath = "src/main/resources/i18n/messages" + lang + ".properties";
+      java.nio.file.Path basePath = java.nio.file.Paths.get("src/main/resources/i18n/").toAbsolutePath().normalize();
+      java.nio.file.Path resolvedPath = java.nio.file.Paths.get(filePath).toAbsolutePath().normalize();
+      if (!resolvedPath.startsWith(basePath)) {
+        throw new SecurityException("Attempted Path Traversal Attack detected: " + filePath);
+      }
+      try (InputStream input = new FileInputStream(resolvedPath.toFile())) {
+        prop = new Properties();
+        prop.load(input);
+      }
     } catch (Exception e) {
       e.printStackTrace();
     }
