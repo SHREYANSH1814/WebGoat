@@ -6,6 +6,8 @@ package org.owasp.webgoat.playwright.webwolf;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
+import java.lang.IllegalStateException;
+
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Page;
 import org.jose4j.jws.AlgorithmIdentifiers;
@@ -26,9 +28,15 @@ class JwtUITest extends PlaywrightTest {
   @Test
   void shouldDecodeJwt(Browser browser) {
     var page = Authentication.sylvester(browser);
-    var secretKey = "test";
-    var jwt =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+    var secretKey = System.getenv("JWT_SECRET_KEY");
+    if (secretKey == null || secretKey.isEmpty()) {
+        throw new IllegalStateException("JWT secret key must be set in environment variable JWT_SECRET_KEY");
+    }
+
+    var jwt = System.getenv("JWT_TOKEN");
+    if (jwt == null || jwt.isEmpty()) {
+        throw new IllegalStateException("JWT token must be set in environment variable JWT_TOKEN");
+    }
 
     page.navigate(webWolfURL("jwt"));
     page.getByPlaceholder("Enter your secret key").fill(secretKey);
