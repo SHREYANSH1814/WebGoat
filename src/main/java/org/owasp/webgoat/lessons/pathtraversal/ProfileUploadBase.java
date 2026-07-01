@@ -48,7 +48,9 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser(username);
 
     try {
-      var uploadedFile = new File(uploadDirectory, fullName);
+      // Sanitize fullName to prevent path traversal
+      String sanitizedFileName = FilenameUtils.getName(fullName);
+      var uploadedFile = new File(uploadDirectory, sanitizedFileName);
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 
@@ -65,9 +67,10 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     }
   }
 
-  @SneakyThrows
-  protected File cleanupAndCreateDirectoryForUser(String username) {
-    var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+  protected File cleanupAndCreateDirectoryForUser(String username) throws IOException {
+    // Sanitize username to prevent path traversal
+    String sanitizedUsername = username.replaceAll("[\\/\\\\]+", "");
+    File uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + sanitizedUsername);
     if (uploadDirectory.exists()) {
       FileSystemUtils.deleteRecursively(uploadDirectory);
     }
