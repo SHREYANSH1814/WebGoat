@@ -51,7 +51,7 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
-    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
+    this.catPicturesDirectory = new File(webGoatHomeDirectory, "PathTraversal/cats").getCanonicalFile();
     this.catPicturesDirectory.mkdirs();
   }
 
@@ -97,8 +97,11 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      var fileName = (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg";
+      var catPicture = new File(catPicturesDirectory, fileName).getCanonicalFile();
+      if (!catPicture.getPath().startsWith(catPicturesDirectory.getPath() + File.separator)) {
+          return ResponseEntity.badRequest().body("Invalid file path");
+      }
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
