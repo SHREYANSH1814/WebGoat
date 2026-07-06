@@ -105,16 +105,25 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
     if (profileDirectoryFiles != null && profileDirectoryFiles.length > 0) {
       return Arrays.stream(profileDirectoryFiles)
-          .filter(file -> FilenameUtils.isExtension(file.getName(), List.of("jpg", "png")))
+          .filter(file -> {
+            try {
+              String canonicalPath = file.getCanonicalPath();
+              String canonicalBase = profilePictureDirectory.getCanonicalPath();
+              return (canonicalPath.startsWith(canonicalBase) && FilenameUtils.isExtension(file.getName(), List.of("jpg", "png")));
+            } catch (IOException e) {
+              return false;
+            }
+          })
           .findFirst()
           .map(
               file -> {
-                try (var inputStream = new FileInputStream(profileDirectoryFiles[0])) {
+                try (var inputStream = new FileInputStream(file)) {
                   return Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(inputStream));
                 } catch (IOException e) {
                   return defaultImage();
                 }
               })
+          .orElse(defaultImage());
           .orElse(defaultImage());
     } else {
       return defaultImage();
