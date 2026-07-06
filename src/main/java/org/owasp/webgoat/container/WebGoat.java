@@ -5,6 +5,7 @@
 package org.owasp.webgoat.container;
 
 import java.io.File;
+import java.io.IOException;
 import org.owasp.webgoat.container.session.LessonSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -28,7 +29,11 @@ public class WebGoat {
 
   @Bean(name = "pluginTargetDirectory")
   public File pluginTargetDirectory(@Value("${webgoat.user.directory}") final String webgoatHome) {
-    return new File(webgoatHome);
+    File baseDir = new File(webgoatHome).getCanonicalFile();
+    if (!baseDir.isDirectory()) {
+      throw new IllegalArgumentException("Configured webgoat.user.directory is not a directory");
+    }
+    return baseDir;
   }
 
   @Bean
