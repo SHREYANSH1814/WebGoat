@@ -4,6 +4,9 @@
  */
 package org.owasp.webgoat.integration;
 
+import java.io.File;
+import java.io.IOException;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
@@ -162,6 +165,10 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
     if (lang == null || lang.equals("")) {
       lang = "";
     } else {
+      // Sanitize lang to prevent path traversal
+      if (!lang.matches("^[a-zA-Z0-9_-]+$")) {
+        throw new IllegalArgumentException("Invalid language parameter");
+      }
       lang = "_" + lang;
     }
     try (InputStream input =
