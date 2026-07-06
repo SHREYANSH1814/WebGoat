@@ -97,8 +97,12 @@ public class CSRFIntegrationTest extends IntegrationTest {
 
     // remove any left over html
     Path webWolfFilePath = Paths.get(webwolfFileDir);
-    if (webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)).toFile().exists()) {
-      Files.delete(webWolfFilePath.resolve(Paths.get(this.getUser(), htmlName)));
+    Path userFilePath = webWolfFilePath.resolve(this.getUser()).resolve(htmlName).normalize();
+    if (!userFilePath.startsWith(webWolfFilePath.resolve(this.getUser()).normalize())) {
+      throw new SecurityException("Invalid file path");
+    }
+    if (userFilePath.toFile().exists()) {
+      Files.delete(userFilePath);
     }
 
     // upload trick html
