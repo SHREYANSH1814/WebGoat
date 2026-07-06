@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.token.Sha512DigestUtils;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
+import java.io.IOException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,7 +52,17 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
-    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
+    File baseDir = new File(webGoatHomeDirectory, "/PathTraversal/");
+    this.catPicturesDirectory = new File(baseDir, "cats");
+    try {
+        String canonicalBase = baseDir.getCanonicalPath();
+        String canonicalCats = this.catPicturesDirectory.getCanonicalPath();
+        if (!canonicalCats.startsWith(canonicalBase)) {
+            throw new SecurityException("Invalid directory path");
+        }
+    } catch (IOException e) {
+        throw new RuntimeException("Failed to validate directory paths", e);
+    }
     this.catPicturesDirectory.mkdirs();
   }
 
