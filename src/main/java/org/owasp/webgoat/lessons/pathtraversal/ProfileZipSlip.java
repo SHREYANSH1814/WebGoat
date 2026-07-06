@@ -77,6 +77,11 @@ public class ProfileZipSlip extends ProfileUploadBase {
       while (entries.hasMoreElements()) {
         ZipEntry e = entries.nextElement();
         File f = new File(tmpZipDirectory.toFile(), e.getName());
+        String canonicalDestPath = f.getCanonicalPath();
+        String canonicalTmpDirPath = tmpZipDirectory.toFile().getCanonicalPath();
+        if (!canonicalDestPath.startsWith(canonicalTmpDirPath + File.separator)) {
+          throw new IOException("Entry is outside of the target dir: " + e.getName());
+        }
         InputStream is = zip.getInputStream(e);
         Files.copy(is, f.toPath(), StandardCopyOption.REPLACE_EXISTING);
       }
