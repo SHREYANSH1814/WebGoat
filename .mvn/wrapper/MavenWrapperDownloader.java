@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import java.net.*;
+import java.net.MalformedURLException;
 import java.io.*;
 import java.nio.channels.*;
 import java.util.Properties;
@@ -60,7 +61,19 @@ public class MavenWrapperDownloader {
                 mavenWrapperPropertyFileInputStream = new FileInputStream(mavenWrapperPropertyFile);
                 Properties mavenWrapperProperties = new Properties();
                 mavenWrapperProperties.load(mavenWrapperPropertyFileInputStream);
-                url = mavenWrapperProperties.getProperty(PROPERTY_NAME_WRAPPER_URL, url);
+                String potentialUrl = mavenWrapperProperties.getProperty(PROPERTY_NAME_WRAPPER_URL, url);
+                // Validate that the URL is a valid HTTP or HTTPS URL to prevent path traversal or other issues
+                try {
+                    URL validatedUrl = new URL(potentialUrl);
+                    String protocol = validatedUrl.getProtocol();
+                    if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
+                        System.out.println("- Invalid protocol in wrapperUrl property, using default URL");
+                    } else {
+                        url = potentialUrl;
+                    }
+                } catch (MalformedURLException e) {
+                    System.out.println("- Invalid URL format in wrapperUrl property, using default URL");
+                }
             } catch (IOException e) {
                 System.out.println("- ERROR loading '" + MAVEN_WRAPPER_PROPERTIES_PATH + "'");
             } finally {
