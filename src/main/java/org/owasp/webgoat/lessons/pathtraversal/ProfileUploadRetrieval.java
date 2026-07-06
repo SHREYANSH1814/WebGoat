@@ -10,6 +10,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +52,15 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
-    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
+    File baseDir = new File(webGoatHomeDirectory, "/PathTraversal/cats");
+    try {
+        this.catPicturesDirectory = baseDir.getCanonicalFile();
+        if (!this.catPicturesDirectory.getPath().startsWith(baseDir.getCanonicalPath())) {
+            throw new IOException("Invalid directory path");
+        }
+    } catch (IOException e) {
+        throw new RuntimeException("Failed to initialize cat pictures directory", e);
+    }
     this.catPicturesDirectory.mkdirs();
   }
 
