@@ -4,6 +4,10 @@
  */
 package org.owasp.webgoat.integration;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
@@ -158,23 +162,30 @@ public class LabelAndHintIntegrationTest extends IntegrationTest {
   }
 
   private Properties getProperties(String lang) {
-    Properties prop = null;
-    if (lang == null || lang.equals("")) {
-      lang = "";
-    } else {
-      lang = "_" + lang;
+      Properties prop = null;
+      if (lang == null || lang.equals("")) {
+        lang = "";
+      } else {
+        lang = "_" + lang;
+      }
+      try {
+        // Construct the base directory path
+        Path baseDir = Paths.get("src/main/resources/i18n").toRealPath().normalize();
+        // Resolve the requested file path
+        Path resolvedPath = baseDir.resolve("messages" + lang + ".properties").normalize();
+        // Check if resolved path is within the base directory
+        if (!resolvedPath.startsWith(baseDir)) {
+          throw new SecurityException("Invalid language parameter leading to path traversal");
+        }
+        try (InputStream input = Files.newInputStream(resolvedPath)) {
+          prop = new Properties();
+          prop.load(input);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      return prop;
     }
-    try (InputStream input =
-        new FileInputStream("src/main/resources/i18n/messages" + lang + ".properties")) {
-
-      prop = new Properties();
-      // load a properties file
-      prop.load(input);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return prop;
-  }
 
   private void checkLang(Properties propsDefault, String lang) {
     JsonPath jsonPath = getLabels(lang);
