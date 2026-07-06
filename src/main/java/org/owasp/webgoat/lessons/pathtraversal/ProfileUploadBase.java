@@ -2,6 +2,8 @@
  * SPDX-FileCopyrightText: Copyright © 2020 WebGoat authors
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
+
+import java.nio.file.Paths;
 package org.owasp.webgoat.lessons.pathtraversal;
 
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
@@ -48,7 +50,8 @@ public class ProfileUploadBase implements AssignmentEndpoint {
     File uploadDirectory = cleanupAndCreateDirectoryForUser(username);
 
     try {
-      var uploadedFile = new File(uploadDirectory, fullName);
+      String sanitizedFileName = Paths.get(fullName).getFileName().toString();
+      var uploadedFile = new File(uploadDirectory, sanitizedFileName);
       uploadedFile.createNewFile();
       FileCopyUtils.copy(file.getBytes(), uploadedFile);
 
