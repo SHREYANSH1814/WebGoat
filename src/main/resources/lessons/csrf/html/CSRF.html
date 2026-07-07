@@ -238,6 +238,8 @@
               method="POST" name="form2"
               th:action="@{/csrf/login}">
 
+            <input type="hidden" name="csrfmiddlewaretoken" th:value="${_csrf.token}" />
+
             Press the button below when your are logged in as the other user<br/>
 
             <input name="submit" value="Solved!" type="submit"/>
