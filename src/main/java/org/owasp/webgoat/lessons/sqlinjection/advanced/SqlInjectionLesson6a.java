@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
 import org.owasp.webgoat.container.LessonDataSource;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -48,12 +49,12 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
   }
 
   public AttackResult injectableQuery(String accountName) {
-    String query = "";
-    try (Connection connection = dataSource.getConnection()) {
+    String query = "SELECT * FROM user_data WHERE last_name = ?";
+    try (Connection connection = dataSource.getConnection();
+         PreparedStatement preparedStatement = connection.prepareStatement(query)) {
       boolean usedUnion = this.unionQueryChecker(accountName);
-      query = "SELECT * FROM user_data WHERE last_name = '" + accountName + "'";
-
-      return executeSqlInjection(connection, query, usedUnion);
+      preparedStatement.setString(1, accountName);
+      return executeSqlInjection(preparedStatement, usedUnion, query, accountName);
     } catch (Exception e) {
       return failed(this)
           .output(this.getClass().getName() + " : " + e.getMessage() + YOUR_QUERY_WAS + query)
@@ -65,13 +66,9 @@ public class SqlInjectionLesson6a implements AssignmentEndpoint {
     return accountName.matches("(?i)(^[^-/*;)]*)(\\s*)UNION(.*$)");
   }
 
-  private AttackResult executeSqlInjection(Connection connection, String query, boolean usedUnion) {
-    try (Statement statement =
-        connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-
-      ResultSet results = statement.executeQuery(query);
-
-      if (!((results != null) && results.first())) {
+  private AttackResult executeSqlInjection(PreparedStatement preparedStatement, boolean usedUnion, String query, String accountName) {
+    try (ResultSet results = preparedStatement.executeQuery()) {
+      if (!(results != null && results.first())) {
         return failed(this)
             .feedback("sql-injection.advanced.6a.no.results")
             .output(YOUR_QUERY_WAS + query)
