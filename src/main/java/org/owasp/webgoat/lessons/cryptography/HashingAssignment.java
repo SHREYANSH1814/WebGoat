@@ -12,6 +12,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 import javax.xml.bind.DatatypeConverter;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
 import org.owasp.webgoat.container.assignments.AssignmentHints;
 import org.owasp.webgoat.container.assignments.AttackResult;
@@ -35,11 +37,14 @@ public class HashingAssignment implements AssignmentEndpoint {
     if (md5Hash == null) {
 
       String secret = SECRETS[new Random().nextInt(SECRETS.length)];
+      import javax.crypto.Mac;
+      import javax.crypto.spec.SecretKeySpec;
 
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      md.update(secret.getBytes());
-      byte[] digest = md.digest();
-      md5Hash = DatatypeConverter.printHexBinary(digest).toUpperCase();
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+            mac.init(secretKeySpec);
+            byte[] digest = mac.doFinal();
+            md5Hash = DatatypeConverter.printHexBinary(digest).toUpperCase();
       request.getSession().setAttribute("md5Hash", md5Hash);
       request.getSession().setAttribute("md5Secret", secret);
     }
