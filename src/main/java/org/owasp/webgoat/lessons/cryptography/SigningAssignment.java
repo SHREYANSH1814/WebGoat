@@ -44,7 +44,8 @@ public class SigningAssignment implements AssignmentEndpoint {
       KeyPair keyPair = CryptoUtil.generateKeyPair();
       privateKey = CryptoUtil.getPrivateKeyInPEM(keyPair);
       request.getSession().setAttribute("privateKeyString", privateKey);
-      request.getSession().setAttribute("keyPair", keyPair);
+      // Store only the public key in session to avoid mixing trusted and untrusted data
+      request.getSession().setAttribute("publicKey", keyPair.getPublic());
     }
     return privateKey;
   }
@@ -56,8 +57,7 @@ public class SigningAssignment implements AssignmentEndpoint {
 
     String tempModulus =
         modulus; /* used to validate the modulus of the public key but might need to be corrected */
-    KeyPair keyPair = (KeyPair) request.getSession().getAttribute("keyPair");
-    RSAPublicKey rsaPubKey = (RSAPublicKey) keyPair.getPublic();
+    RSAPublicKey rsaPubKey = (RSAPublicKey) request.getSession().getAttribute("publicKey");
     if (tempModulus.length() == 512) {
       tempModulus = "00".concat(tempModulus);
     }
