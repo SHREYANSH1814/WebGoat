@@ -19,6 +19,7 @@
         <form class="attack-form" accept-charset="UNKNOWN"  style="position:relative;top:150px"
               method="POST" name="form"
               th:action="@{/WebWolf/mail}">
+            <input type="hidden" name="csrfmiddlewaretoken" th:value="${_csrf.token}" />
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-4">
