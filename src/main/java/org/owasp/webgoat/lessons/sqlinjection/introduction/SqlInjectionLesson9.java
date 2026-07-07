@@ -47,12 +47,7 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
 
   protected AttackResult injectableQueryIntegrity(String name, String auth_tan) {
     StringBuilder output = new StringBuilder();
-    String queryInjection =
-        "SELECT * FROM employees WHERE last_name = '"
-            + name
-            + "' AND auth_tan = '"
-            + auth_tan
-            + "'";
+    String queryInjection = "SELECT * FROM employees WHERE last_name = ? AND auth_tan = ?";
     try (Connection connection = dataSource.getConnection()) {
       // V2019_09_26_7__employees.sql
       int oldMaxSalary = this.getMaxSalary(connection);
@@ -60,9 +55,12 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // begin transaction
       connection.setAutoCommit(false);
       // do injectable query
-      Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-      SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
+      try (PreparedStatement ps = connection.prepareStatement(queryInjection, TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE)) {
+        ps.setString(1, name);
+        ps.setString(2, auth_tan);
+        SqlInjectionLesson8.log(connection, queryInjection);
+        ps.execute();
+      }
       // check new sum of salaries other employees and new salaries of John
       int newJohnSalary = this.getJohnSalary(connection);
       int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
@@ -89,26 +87,40 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
     }
   }
 
-  private int getSqlInt(Connection connection, String query) throws SQLException {
-    Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-    ResultSet results = statement.executeQuery(query);
-    results.first();
-    return results.getInt(1);
+  private int getSqlInt(Connection connection, String query, String param1, String param2) throws SQLException {
+    String sql = "";
+    if (param2 == null) {
+      sql = query;
+    } else {
+      sql = query;
+    }
+    try (PreparedStatement ps = connection.prepareStatement(sql, TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE)) {
+      if (param1 != null) {
+        ps.setString(1, param1);
+      }
+      if (param2 != null) {
+        ps.setString(2, param2);
+      }
+      try (ResultSet results = ps.executeQuery()) {
+        results.first();
+        return results.getInt(1);
+      }
+    }
   }
 
   private int getMaxSalary(Connection connection) throws SQLException {
     String query = "SELECT max(salary) FROM employees";
-    return this.getSqlInt(connection, query);
+    return this.getSqlInt(connection, query, null, null);
   }
 
   private int getSumSalariesOfOtherEmployees(Connection connection) throws SQLException {
-    String query = "SELECT sum(salary) FROM employees WHERE auth_tan != '3SL99A'";
-    return this.getSqlInt(connection, query);
+    String query = "SELECT sum(salary) FROM employees WHERE auth_tan != ?";
+    return this.getSqlInt(connection, query, "3SL99A", null);
   }
 
   private int getJohnSalary(Connection connection) throws SQLException {
-    String query = "SELECT salary FROM employees WHERE auth_tan = '3SL99A'";
-    return this.getSqlInt(connection, query);
+    String query = "SELECT salary FROM employees WHERE auth_tan = ?";
+    return this.getSqlInt(connection, query, "3SL99A", null);
   }
 
   private ResultSet getEmployeesDataOrderBySalaryDesc(Connection connection) throws SQLException {
