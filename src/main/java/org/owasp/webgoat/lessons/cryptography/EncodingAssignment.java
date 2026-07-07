@@ -36,7 +36,8 @@ public class EncodingAssignment implements AssignmentEndpoint {
       String password =
           HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
       basicAuth = getBasicAuth(username, password);
-      request.getSession().setAttribute("basicAuth", basicAuth);
+      String sanitizedBasicAuth = basicAuth.replaceAll("[\n\r\t\0\f\b]", "");
+      request.getSession().setAttribute("basicAuth", sanitizedBasicAuth);
     }
     return "Authorization: Basic ".concat(basicAuth);
   }
