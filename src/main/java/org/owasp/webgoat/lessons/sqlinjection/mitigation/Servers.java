@@ -43,14 +43,17 @@ public class Servers {
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   public List<Server> sort(@RequestParam String column) throws Exception {
-    List<Server> servers = new ArrayList<>();
+      List<Server> servers = new ArrayList<>();
 
-    try (var connection = dataSource.getConnection()) {
-      try (var statement =
-          connection.prepareStatement(
-              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
-                  + " of order' order by "
-                  + column)) {
+      // Validate the column parameter against a whitelist of allowed columns
+      List<String> allowedColumns = List.of("id", "hostname", "ip", "mac", "status", "description");
+      if (!allowedColumns.contains(column)) {
+          throw new IllegalArgumentException("Invalid column name");
+      }
+
+      try (var connection = dataSource.getConnection()) {
+        String sql = "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out of order' order by " + column;
+        try (var statement = connection.prepareStatement(sql)) {
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
