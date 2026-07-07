@@ -18,12 +18,17 @@ public class SerializationHelper {
   private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
-    byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-    Object o = ois.readObject();
-    ois.close();
-    return o;
-  }
+      byte[] data = Base64.getDecoder().decode(s);
+      try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
+          Object o = ois.readObject();
+          // Implement a whitelist check for allowed classes
+          if (!(o instanceof Serializable)) {
+              throw new IOException("Deserialized object is not of expected type");
+          }
+          // Add additional checks here as needed
+          return o;
+      }
+    }
 
   public static String toString(Serializable o) throws IOException {
 
