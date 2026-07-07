@@ -5,6 +5,7 @@
 package org.owasp.webgoat.lessons.cryptography;
 
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
+import org.springframework.web.bind.annotation.RequestMethod;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,7 +47,7 @@ public class HashingAssignment implements AssignmentEndpoint {
     return md5Hash;
   }
 
-  @RequestMapping(path = "/crypto/hashing/sha256", produces = MediaType.TEXT_HTML_VALUE)
+  @RequestMapping(path = "/crypto/hashing/sha256", method = RequestMethod.GET, produces = MediaType.TEXT_HTML_VALUE)
   @ResponseBody
   public String getSha256(HttpServletRequest request) throws NoSuchAlgorithmException {
 
