@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 package org.owasp.webgoat.webwolf;
-
+import static java.util.Comparator.comparing;
+import org.apache.commons.io.FilenameUtils;
 import static java.util.Comparator.comparing;
 import static org.springframework.http.MediaType.ALL_VALUE;
 
@@ -72,11 +73,12 @@ public class FileServer {
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      String safeFileName = FilenameUtils.getName(multipartFile.getOriginalFilename());
+      var destinationFile = destinationDir.toPath().resolve(safeFileName);
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", new File(destinationDir, FilenameUtils.getName(multipartFile.getOriginalFilename())));
 
     return new ModelAndView(
         new RedirectView("files", true),
