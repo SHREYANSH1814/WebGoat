@@ -39,7 +39,7 @@
         <form class="attack-form" accept-charset="UNKNOWN" name="task"
               method="POST"
               th:action="@{/LogSpoofing/log-bleeding}">
-
+            {% csrf_token %}
             <input type="text" value="" name="username" placeholder="username"/>
             <input type="password" value="" name="password" placeholder="password"/>
             <input type="submit" value="Submit"/>
