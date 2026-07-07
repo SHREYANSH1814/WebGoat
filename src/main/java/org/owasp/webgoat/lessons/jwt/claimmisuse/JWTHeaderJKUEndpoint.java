@@ -1,6 +1,8 @@
 /*
  * SPDX-FileCopyrightText: Copyright © 2023 WebGoat authors
- * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
+import java.util.List;
  */
 package org.owasp.webgoat.lessons.jwt.claimmisuse;
 
@@ -54,7 +56,16 @@ public class JWTHeaderJKUEndpoint implements AssignmentEndpoint {
       try {
         var decodedJWT = JWT.decode(token);
         var jku = decodedJWT.getHeaderClaim("jku");
-        var jwkProvider = new JwkProviderBuilder(new URL(jku.asString())).build();
+        String jkuUrlString = jku.asString();
+        URL jkuUrl = new URL(jkuUrlString);
+
+        // Allowlist of approved hosts
+        List<String> allowedHosts = List.of("trusted.example.com", "keys.example.org");
+        if (!allowedHosts.contains(jkuUrl.getHost())) {
+            return failed(this).feedback("jwt-invalid-jku-host").build();
+        }
+
+        var jwkProvider = new JwkProviderBuilder(jkuUrl).build();
         var jwk = jwkProvider.get(decodedJWT.getKeyId());
         var algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey());
         JWT.require(algorithm).build().verify(decodedJWT);
