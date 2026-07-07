@@ -6,6 +6,7 @@ package org.owasp.webgoat.lessons.sqlinjection.introduction;
 
 import static org.hsqldb.jdbc.JDBCResultSet.CONCUR_UPDATABLE;
 import static org.hsqldb.jdbc.JDBCResultSet.TYPE_SCROLL_SENSITIVE;
+import java.sql.PreparedStatement;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
@@ -60,9 +61,11 @@ public class SqlInjectionLesson9 implements AssignmentEndpoint {
       // begin transaction
       connection.setAutoCommit(false);
       // do injectable query
-      Statement statement = connection.createStatement(TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
-      SqlInjectionLesson8.log(connection, queryInjection);
-      statement.execute(queryInjection);
+      PreparedStatement statement = connection.prepareStatement("SELECT * FROM employees WHERE last_name = ? AND auth_tan = ?", TYPE_SCROLL_SENSITIVE, CONCUR_UPDATABLE);
+      statement.setString(1, name);
+      statement.setString(2, auth_tan);
+      SqlInjectionLesson8.log(connection, statement.toString());
+      statement.execute();
       // check new sum of salaries other employees and new salaries of John
       int newJohnSalary = this.getJohnSalary(connection);
       int newSumSalariesOfOtherEmployees = this.getSumSalariesOfOtherEmployees(connection);
