@@ -14,6 +14,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +54,11 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   private void createSecretFileWithRandomContents(WebGoatUser user) {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
+    File baseDirectory = new File(webGoatHomeDirectory, "/XXE");
+    File targetDirectory = new File(baseDirectory, user.getUsername()).getCanonicalFile();
+    if (!targetDirectory.getPath().startsWith(baseDirectory.getCanonicalPath() + File.separator)) {
+        throw new IOException("Invalid user directory path");
+    }
     if (!targetDirectory.exists()) {
       targetDirectory.mkdirs();
     }
