@@ -10,6 +10,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.nio.file.Path;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,7 +52,8 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   private final File catPicturesDirectory;
 
   public ProfileUploadRetrieval(@Value("${webgoat.server.directory}") String webGoatHomeDirectory) {
-    this.catPicturesDirectory = new File(webGoatHomeDirectory, "/PathTraversal/" + "/cats");
+    File baseDir = new File(webGoatHomeDirectory, "/PathTraversal/");
+    this.catPicturesDirectory = new File(baseDir.getCanonicalPath(), "cats");
     this.catPicturesDirectory.mkdirs();
   }
 
@@ -90,36 +92,40 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
   @GetMapping("/PathTraversal/random-picture")
   @ResponseBody
   public ResponseEntity<?> getProfilePicture(HttpServletRequest request) {
-    var queryParams = request.getQueryString();
-    if (queryParams != null && (queryParams.contains("..") || queryParams.contains("/"))) {
-      return ResponseEntity.badRequest()
-          .body("Illegal characters are not allowed in the query params");
-    }
-    try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
-
-      if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
-        return ResponseEntity.ok()
-            .contentType(MediaType.parseMediaType(MediaType.IMAGE_JPEG_VALUE))
-            .body(FileCopyUtils.copyToByteArray(catPicture));
+      if (id != null && (id.contains("..") || id.contains("/") || id.contains("\\"))) {
+        return ResponseEntity.badRequest()
+            .body("Illegal characters are not allowed in the id parameter");
       }
-      if (catPicture.exists()) {
-        return ResponseEntity.ok()
-            .contentType(MediaType.parseMediaType(MediaType.IMAGE_JPEG_VALUE))
+      try {
+        String fileName = (id == null ? String.valueOf(RandomUtils.nextInt(1, 11)) : id) + ".jpg";
+        File catPicture = new File(catPicturesDirectory, fileName);
+        String canonicalBase = catPicturesDirectory.getCanonicalPath();
+        String canonicalFile = catPicture.getCanonicalPath();
+        if (!canonicalFile.startsWith(canonicalBase + File.separator)) {
+          return ResponseEntity.badRequest().body("Invalid file path");
+        }
+
+        if (catPicture.getName().equalsIgnoreCase("path-traversal-secret.jpg")) {
+          return ResponseEntity.ok()
+              .contentType(MediaType.IMAGE_JPEG)
+              .body(FileCopyUtils.copyToByteArray(catPicture));
+        }
+
+        if (catPicture.exists()) {
+          return ResponseEntity.ok()
+              .contentType(MediaType.IMAGE_JPEG)
+              .location(new URI("/PathTraversal/random-picture?id=" + catPicture.getName()))
+              .body(Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(catPicture)));
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .location(new URI("/PathTraversal/random-picture?id=" + catPicture.getName()))
-            .body(Base64.getEncoder().encode(FileCopyUtils.copyToByteArray(catPicture)));
+            .body(StringUtils.arrayToCommaDelimitedString(catPicture.getParentFile().listFiles()).getBytes());
+      } catch (IOException | URISyntaxException e) {
+        log.error("Image not found", e);
       }
-      return ResponseEntity.status(HttpStatus.NOT_FOUND)
-          .location(new URI("/PathTraversal/random-picture?id=" + catPicture.getName()))
-          .body(
-              StringUtils.arrayToCommaDelimitedString(catPicture.getParentFile().listFiles())
-                  .getBytes());
-    } catch (IOException | URISyntaxException e) {
-      log.error("Image not found", e);
-    }
 
-    return ResponseEntity.badRequest().build();
-  }
+      return ResponseEntity.badRequest().build();
+    }
 }
