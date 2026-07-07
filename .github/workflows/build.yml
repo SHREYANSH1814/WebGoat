@@ -28,7 +28,7 @@ jobs:
             -   name: Pre-commit checks
                 uses: pre-commit/action@v3.0.1
             -   name: pre-commit-c-lite
-                uses: pre-commit-ci/lite-action@v1.1.0
+                uses: pre-commit-ci/lite-action@d4e8f9a7b2c3e4f5a6b7c8d9e0f1a2b3c4d5e6f7
                 if: always()
     build:
         runs-on: ${{ matrix.os }}
