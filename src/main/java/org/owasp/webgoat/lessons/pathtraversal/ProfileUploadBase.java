@@ -4,6 +4,9 @@
  */
 package org.owasp.webgoat.lessons.pathtraversal;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.informationMessage;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
@@ -67,7 +70,8 @@ public class ProfileUploadBase implements AssignmentEndpoint {
 
   @SneakyThrows
   protected File cleanupAndCreateDirectoryForUser(String username) {
-    var uploadDirectory = new File(this.webGoatHomeDirectory, "/PathTraversal/" + username);
+    var baseDir = new File(this.webGoatHomeDirectory, "/PathTraversal/");
+    var uploadDirectory = new File(baseDir.getCanonicalPath(), username);
     if (uploadDirectory.exists()) {
       FileSystemUtils.deleteRecursively(uploadDirectory);
     }
