@@ -36,6 +36,9 @@ public class EncodingAssignment implements AssignmentEndpoint {
       String password =
           HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
       basicAuth = getBasicAuth(username, password);
+      // Store username and password separately to maintain trust boundary
+      request.getSession().setAttribute("basicAuthUser", username);
+      request.getSession().setAttribute("basicAuthPwd", password);
       request.getSession().setAttribute("basicAuth", basicAuth);
     }
     return "Authorization: Basic ".concat(basicAuth);
@@ -47,11 +50,14 @@ public class EncodingAssignment implements AssignmentEndpoint {
       HttpServletRequest request,
       @RequestParam String answer_user,
       @RequestParam String answer_pwd) {
-    String basicAuth = (String) request.getSession().getAttribute("basicAuth");
-    if (basicAuth != null
+    String storedUser = (String) request.getSession().getAttribute("basicAuthUser");
+    String storedPwd = (String) request.getSession().getAttribute("basicAuthPwd");
+    if (storedUser != null
+        && storedPwd != null
         && answer_user != null
         && answer_pwd != null
-        && basicAuth.equals(getBasicAuth(answer_user, answer_pwd))) {
+        && storedUser.equals(answer_user)
+        && storedPwd.equals(answer_pwd)) {
       return success(this).feedback("crypto-encoding.success").build();
     } else {
       return failed(this).feedback("crypto-encoding.empty").build();
