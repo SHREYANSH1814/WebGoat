@@ -275,6 +275,7 @@
               method="POST" name="form"
               th:action="@{/SqlInjection/attack10}"
               autocomplete="off">
+            {% csrf_token %}
             <table>
                 <tr>
                     <td><label>Action contains:</label></td>
