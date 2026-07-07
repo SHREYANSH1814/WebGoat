@@ -41,7 +41,6 @@ public class HashingAssignment implements AssignmentEndpoint {
       byte[] digest = md.digest();
       md5Hash = DatatypeConverter.printHexBinary(digest).toUpperCase();
       request.getSession().setAttribute("md5Hash", md5Hash);
-      request.getSession().setAttribute("md5Secret", secret);
     }
     return md5Hash;
   }
