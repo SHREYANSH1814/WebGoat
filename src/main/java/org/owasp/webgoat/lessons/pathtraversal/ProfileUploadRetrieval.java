@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Base64;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
 import org.owasp.webgoat.container.CurrentUsername;
@@ -97,8 +98,12 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
     }
     try {
       var id = request.getParameter("id");
-      var catPicture =
-          new File(catPicturesDirectory, (id == null ? RandomUtils.nextInt(1, 11) : id) + ".jpg");
+      if (id == null) {
+          id = String.valueOf(RandomUtils.nextInt(1, 11));
+      } else if (!id.matches("\\d+")) {
+          return ResponseEntity.badRequest().body("Invalid id parameter");
+      }
+      var catPicture = new File(catPicturesDirectory, id + ".jpg");
 
       if (catPicture.getName().toLowerCase().contains("path-traversal-secret.jpg")) {
         return ResponseEntity.ok()
