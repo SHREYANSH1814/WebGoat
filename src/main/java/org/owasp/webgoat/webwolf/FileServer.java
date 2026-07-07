@@ -93,7 +93,10 @@ public class FileServer {
     modelAndView.setViewName("files");
     File changeIndicatorFile = new File(destinationDir, username + "_changed");
     if (changeIndicatorFile.exists()) {
-      modelAndView.addObject("uploadSuccess", request.getParameter("uploadSuccess"));
+      String uploadSuccessParam = request.getParameter("uploadSuccess");
+      if ("true".equalsIgnoreCase(uploadSuccessParam)) {
+          modelAndView.addObject("uploadSuccess", "File uploaded successful");
+      }
     }
     changeIndicatorFile.delete();
 
