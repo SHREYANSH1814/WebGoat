@@ -5,6 +5,7 @@
 package org.owasp.webgoat.lessons.pathtraversal;
 
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed;
+import java.io.OutputStream;
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.annotation.PostConstruct;
@@ -61,7 +62,13 @@ public class ProfileUploadRetrieval implements AssignmentEndpoint {
       try (InputStream is =
           new ClassPathResource("lessons/pathtraversal/images/cats/" + i + ".jpg")
               .getInputStream()) {
-        FileCopyUtils.copy(is, new FileOutputStream(new File(catPicturesDirectory, i + ".jpg")));
+        File destinationFile = new File(catPicturesDirectory, i + ".jpg");
+String canonicalDirPath = catPicturesDirectory.getCanonicalPath();
+String canonicalDestPath = destinationFile.getCanonicalPath();
+if (!canonicalDestPath.startsWith(canonicalDirPath + File.separator)) {
+    throw new IOException("Attempt to write file outside of target directory");
+}
+FileCopyUtils.copy(is, new FileOutputStream(destinationFile));
       } catch (Exception e) {
         log.error("Unable to copy pictures" + e.getMessage());
       }
