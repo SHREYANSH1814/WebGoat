@@ -24,8 +24,11 @@ public class StartLesson {
       produces = "text/html")
   public ModelAndView lessonPage(HttpServletRequest request) {
     var model = new ModelAndView("lesson_content");
-    var path = request.getRequestURL().toString(); // we now got /a/b/c/AccessControlMatrix.lesson
-    var lessonName = path.substring(path.lastIndexOf('/') + 1, path.indexOf(".lesson"));
+    String lessonName = request.getParameter("lessonName");
+    if (lessonName == null || !lessonName.matches("[a-zA-Z0-9_]+")) {
+      // Invalid lesson name, handle error or return empty model
+      return model;
+    }
 
     course.getLessons().stream()
         .filter(l -> l.getId().equals(lessonName))
