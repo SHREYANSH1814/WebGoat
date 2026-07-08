@@ -53,7 +53,11 @@ public class BlindSendFileAssignment implements AssignmentEndpoint, Initializabl
   private void createSecretFileWithRandomContents(WebGoatUser user) {
     var fileContents = "WebGoat 8.0 rocks... (" + randomAlphabetic(10) + ")";
     userToFileContents.put(user, fileContents);
-    File targetDirectory = new File(webGoatHomeDirectory, "/XXE/" + user.getUsername());
+    File baseDirectory = new File(webGoatHomeDirectory, "/XXE/");
+    File targetDirectory = new File(baseDirectory, user.getUsername()).getCanonicalFile();
+    if (!targetDirectory.getPath().startsWith(baseDirectory.getCanonicalPath() + File.separator)) {
+        throw new IOException("Invalid user directory path");
+    }
     if (!targetDirectory.exists()) {
       targetDirectory.mkdirs();
     }
