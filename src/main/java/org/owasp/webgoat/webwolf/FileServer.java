@@ -17,6 +17,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +41,8 @@ public class FileServer {
 
   private static final DateTimeFormatter dateTimeFormatter =
       DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+  private static final Pattern SAFE_FILENAME_PATTERN = Pattern.compile("[a-zA-Z0-9._-]+");
 
   @Value("${webwolf.fileserver.location}")
   private String fileLocation;
@@ -69,14 +72,23 @@ public class FileServer {
     var username = authentication.getName();
     var destinationDir = new File(fileLocation, username);
     destinationDir.mkdirs();
+
+    String originalFilename = multipartFile.getOriginalFilename();
+    if (originalFilename == null || !SAFE_FILENAME_PATTERN.matcher(originalFilename).matches()) {
+      log.warn("Invalid filename detected: {}", originalFilename);
+      return new ModelAndView(
+          new RedirectView("files", true),
+          new ModelMap().addAttribute("uploadError", "Invalid file name"));
+    }
+
     // DO NOT use multipartFile.transferTo(), see
     // https://stackoverflow.com/questions/60336929/java-nio-file-nosuchfileexception-when-file-transferto-is-called
     try (InputStream is = multipartFile.getInputStream()) {
-      var destinationFile = destinationDir.toPath().resolve(multipartFile.getOriginalFilename());
+      var destinationFile = destinationDir.toPath().resolve(originalFilename);
       Files.deleteIfExists(destinationFile);
       Files.copy(is, destinationFile);
     }
-    log.debug("File saved to {}", new File(destinationDir, multipartFile.getOriginalFilename()));
+    log.debug("File saved to {}", new File(destinationDir, originalFilename));
 
     return new ModelAndView(
         new RedirectView("files", true),
