@@ -8,6 +8,7 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.failed
 import static org.owasp.webgoat.container.assignments.AttackResultBuilder.success;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -54,20 +55,30 @@ public class SigningAssignment implements AssignmentEndpoint {
   public AttackResult completed(
       HttpServletRequest request, @RequestParam String modulus, @RequestParam String signature) {
 
-    String tempModulus =
-        modulus; /* used to validate the modulus of the public key but might need to be corrected */
     KeyPair keyPair = (KeyPair) request.getSession().getAttribute("keyPair");
-    RSAPublicKey rsaPubKey = (RSAPublicKey) keyPair.getPublic();
-    if (tempModulus.length() == 512) {
-      tempModulus = "00".concat(tempModulus);
+    if (keyPair == null) {
+      log.warn("No key pair found in session");
+      return failed(this).feedback("crypto-signing.nokeypair").build();
     }
-    if (!DatatypeConverter.printHexBinary(rsaPubKey.getModulus().toByteArray())
-        .equals(tempModulus.toUpperCase())) {
+    RSAPublicKey rsaPubKey = (RSAPublicKey) keyPair.getPublic();
+
+    // Validate and parse the untrusted modulus parameter safely
+    BigInteger inputModulus;
+    try {
+      inputModulus = new BigInteger(modulus, 16);
+    } catch (NumberFormatException e) {
+      log.warn("Invalid modulus format: {}", modulus);
+      return failed(this).feedback("crypto-signing.modulusformaterror").build();
+    }
+
+    // Compare the input modulus with the trusted public key modulus
+    if (!rsaPubKey.getModulus().equals(inputModulus)) {
       log.warn("modulus {} incorrect", modulus);
       return failed(this).feedback("crypto-signing.modulusnotok").build();
     }
-    /* orginal modulus must be used otherwise the signature would be invalid */
-    if (CryptoUtil.verifyMessage(modulus, signature, keyPair.getPublic())) {
+
+    // Use the trusted public key modulus for signature verification, not the untrusted input
+    if (CryptoUtil.verifyMessage(DatatypeConverter.printHexBinary(rsaPubKey.getModulus().toByteArray()), signature, keyPair.getPublic())) {
       return success(this).feedback("crypto-signing.success").build();
     } else {
       log.warn("signature incorrect");
