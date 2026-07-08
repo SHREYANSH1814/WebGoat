@@ -36,7 +36,10 @@ public class EncodingAssignment implements AssignmentEndpoint {
       String password =
           HashingAssignment.SECRETS[new Random().nextInt(HashingAssignment.SECRETS.length)];
       basicAuth = getBasicAuth(username, password);
-      request.getSession().setAttribute("basicAuth", basicAuth);
+      // Sanitize username and password before setting in session attribute
+      String sanitizedBasicAuth = getBasicAuth(sanitize(username), sanitize(password));
+      request.getSession().setAttribute("basicAuth", sanitizedBasicAuth);
+      basicAuth = sanitizedBasicAuth;
     }
     return "Authorization: Basic ".concat(basicAuth);
   }
@@ -51,10 +54,18 @@ public class EncodingAssignment implements AssignmentEndpoint {
     if (basicAuth != null
         && answer_user != null
         && answer_pwd != null
-        && basicAuth.equals(getBasicAuth(answer_user, answer_pwd))) {
+        && basicAuth.equals(getBasicAuth(sanitize(answer_user), sanitize(answer_pwd)))) {
       return success(this).feedback("crypto-encoding.success").build();
     } else {
       return failed(this).feedback("crypto-encoding.empty").build();
     }
+  }
+
+  private String sanitize(String input) {
+    if (input == null) {
+      return null;
+    }
+    // Basic sanitization: remove control characters and trim whitespace
+    return input.replaceAll("[\\p{Cntrl}]", "").trim();
   }
 }
