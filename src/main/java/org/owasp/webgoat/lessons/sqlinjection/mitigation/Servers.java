@@ -45,11 +45,15 @@ public class Servers {
   public List<Server> sort(@RequestParam String column) throws Exception {
     List<Server> servers = new ArrayList<>();
 
+    // Validate the column parameter against a whitelist of allowed columns
+    if (!isValidColumn(column)) {
+      throw new IllegalArgumentException("Invalid column name");
+    }
+
     try (var connection = dataSource.getConnection()) {
       try (var statement =
           connection.prepareStatement(
-              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
-                  + " of order' order by "
+              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out of order' order by "
                   + column)) {
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
@@ -67,5 +71,14 @@ public class Servers {
       }
     }
     return servers;
+  }
+
+  private boolean isValidColumn(String column) {
+    return "id".equalsIgnoreCase(column)
+        || "hostname".equalsIgnoreCase(column)
+        || "ip".equalsIgnoreCase(column)
+        || "mac".equalsIgnoreCase(column)
+        || "status".equalsIgnoreCase(column)
+        || "description".equalsIgnoreCase(column);
   }
 }
