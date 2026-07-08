@@ -1,5 +1,5 @@
 !function(n,r){var t,e;"object"==typeof exports&&"undefined"!=typeof module?module.exports=r():"function"==typeof define&&define.amd?define("underscore",r):(t=n._,e=r(),(n._=e).noConflict=function(){return n._=t,e})}(this,function(){
-//     Underscore.js 1.10.2
+//     Underscore.js 1.13.1
 //     https://underscorejs.org
 //     (c) 2009-2020 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
