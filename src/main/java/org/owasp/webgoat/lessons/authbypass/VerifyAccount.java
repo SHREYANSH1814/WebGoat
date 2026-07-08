@@ -47,6 +47,33 @@ public class VerifyAccount implements AssignmentEndpoint {
       throws ServletException, IOException {
     AccountVerificationHelper verificationHelper = new AccountVerificationHelper();
     Map<String, String> submittedAnswers = parseSecQuestions(req);
+
+    // Validate userId is a positive integer
+    int userIdInt;
+    try {
+      userIdInt = Integer.parseInt(userId);
+      if (userIdInt <= 0) {
+        return failed(this).feedback("verify-account.invalid-userid").build();
+      }
+    } catch (NumberFormatException e) {
+      return failed(this).feedback("verify-account.invalid-userid").build();
+    }
+
+    // Validate verifyMethod against allowed values
+    if (!"email".equalsIgnoreCase(verifyMethod) && !"sms".equalsIgnoreCase(verifyMethod)) {
+      return failed(this).feedback("verify-account.invalid-verifymethod").build();
+    }
+
+    // Validate security question answers: ensure no null or empty values
+    for (Map.Entry<String, String> entry : submittedAnswers.entrySet()) {
+      String answer = entry.getValue();
+      if (answer == null || answer.trim().isEmpty()) {
+        return failed(this).feedback("verify-account.invalid-security-answer").build();
+      }
+      // Optionally sanitize input by trimming whitespace
+      submittedAnswers.put(entry.getKey(), answer.trim());
+    }
+
     if (verificationHelper.didUserLikelylCheat((HashMap) submittedAnswers)) {
       return failed(this)
           .feedback("verify-account.cheated")
@@ -55,8 +82,8 @@ public class VerifyAccount implements AssignmentEndpoint {
     }
 
     // else
-    if (verificationHelper.verifyAccount(Integer.valueOf(userId), (HashMap) submittedAnswers)) {
-      userSessionData.setValue("account-verified-id", userId);
+    if (verificationHelper.verifyAccount(userIdInt, (HashMap) submittedAnswers)) {
+      userSessionData.setValue("account-verified-id", String.valueOf(userIdInt));
       return success(this).feedback("verify-account.success").build();
     } else {
       return failed(this).feedback("verify-account.failed").build();
