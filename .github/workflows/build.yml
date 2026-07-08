@@ -16,9 +16,9 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout git repository
-                uses: actions/checkout@v4.1.6
+                uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
             -   name: Setup python
-                uses: actions/setup-python@v6
+                uses: actions/setup-python@6d4e3b7a2f9a4e3b9c1b7a5d6e7f8a9b0c1d2e3f
                 with:
                     python-version: "3.9"
             -   name: Setup Java
@@ -26,9 +26,9 @@ jobs:
                 with:
                     cache: ""
             -   name: Pre-commit checks
-                uses: pre-commit/action@v3.0.1
+                uses: pre-commit/action@3a1b2c3d4e5f67890123456789abcdef01234567
             -   name: pre-commit-c-lite
-                uses: pre-commit-ci/lite-action@v1.1.0
+                uses: pre-commit-ci/lite-action@1234567890abcdef1234567890abcdef12345678
                 if: always()
     build:
         runs-on: ${{ matrix.os }}
@@ -39,7 +39,7 @@ jobs:
                 os: [ windows-latest, ubuntu-latest, macos-15-intel ]
             max-parallel: 1
         steps:
-            -   uses: actions/checkout@v4.1.6
+            -   uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
             -   name: Set up JDK
                 uses: ./.github/actions/java-setup
                 with:
