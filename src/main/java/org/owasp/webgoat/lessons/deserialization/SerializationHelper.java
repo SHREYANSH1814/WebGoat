@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -19,7 +20,27 @@ public class SerializationHelper {
 
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
-    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data)) {
+      @Override
+      protected Class<?> resolveClass(java.io.ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+        String className = desc.getName();
+        // Allow only safe classes to be deserialized
+        if (className.equals("java.lang.String") ||
+            className.equals("java.lang.Integer") ||
+            className.equals("java.lang.Long") ||
+            className.equals("java.lang.Boolean") ||
+            className.equals("java.util.ArrayList") ||
+            className.equals("java.util.HashMap") ||
+            className.equals("java.util.LinkedHashMap") ||
+            className.equals("java.util.HashSet") ||
+            className.equals("java.util.LinkedHashSet") ||
+            className.equals("java.util.Date")) {
+          return super.resolveClass(desc);
+        } else {
+          throw new InvalidClassException("Unauthorized deserialization attempt", className);
+        }
+      }
+    };
     Object o = ois.readObject();
     ois.close();
     return o;
